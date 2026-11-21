@@ -70,8 +70,16 @@ window.DECK = (() => {
 
   // ---- layout: a 1920x1080 stage in landscape, a 390x844 stage in portrait, both centred in the viewport
   let lay, SC = [], slides = [], tops = [], heights = [], snaps = [];
+  // The height of one page is the real height of a one-page slide (100svh in CSS), not innerHeight: on a phone
+  // innerHeight grows and shrinks while the address bar hides and shows during scrolling. Using it made the
+  // threads half-morph into the next slide and jump back and forth, out of step with the text.
+  function pageH() {
+    const one = slides.find((s) => !s.classList.contains('two')) || slides[0];
+    const h = one ? one.offsetHeight : 0;
+    return h > 100 ? h : innerHeight;
+  }
   function layout() {
-    const iw = innerWidth, ih = innerHeight, portrait = iw / ih < 0.8;
+    const iw = innerWidth, ih = pageH(), portrait = iw / ih < 0.8;
     const px = portrait ? Math.min(iw, ih * 0.46209) / 390 : Math.min(iw, ih * 1.77778) / 1920;
     const sw = (portrait ? 390 : 1920) * px, sh = (portrait ? 844 : 1080) * px;
     lay = { px, ox: (iw - sw) / 2, oy: (ih - sh) / 2, portrait, iw, ih };
@@ -86,6 +94,11 @@ window.DECK = (() => {
   // where we are: slide index i, transition f towards slide i+1, inner scroll u of a tall slide (0..1)
   function where() {
     if (SHOT) return { i: window.DECK_START, f: 0, u: window.DECK_PAGE ? 1 : 0 };
+    // measurements go stale while a phone browser moves its bars or a window is resized: check them every time
+    // (two cheap reads) and re-measure when the page height or the slide positions have moved
+    if (slides.length && (Math.abs(pageH() - lay.ih) > 0.5 || innerWidth !== lay.iw || slides[slides.length - 1].offsetTop !== tops[tops.length - 1])) {
+      if (innerWidth === canW && innerHeight <= canH) layout(); else size();
+    }
     const y = window.scrollY || document.documentElement.scrollTop || 0, vh = lay.ih;
     let i = 0;
     while (i < tops.length - 1 && y >= tops[i + 1]) i++;
@@ -97,17 +110,19 @@ window.DECK = (() => {
 
   // ---- canvases
   const $ = (id) => document.getElementById(id);
-  let cv, gl, fr, core, b1, b2, ctx, gctx, fctx, dpr, frontClean = false, coreOn = null;
+  let cv, gl, fr, core, b1, b2, ctx, gctx, fctx, dpr, frontClean = false, coreOn = null, canW = 0, canH = 0;
   function size() {
     layout();
+    // canvases cover the largest viewport (address bar hidden), so they never need to be re-created while scrolling
+    canW = lay.iw; canH = Math.max(innerHeight, lay.ih, canH && canW === lay.iw ? canH : 0);
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    if (!SHOT) dpr = Math.max(1, Math.min(dpr, 1.6, Math.sqrt(3.0e6 / (lay.iw * lay.ih))));
+    if (!SHOT) dpr = Math.max(1, Math.min(dpr, 1.6, Math.sqrt(3.0e6 / (canW * canH))));
     for (const c of [cv, fr]) {
-      c.width = Math.round(lay.iw * dpr); c.height = Math.round(lay.ih * dpr);
-      c.style.width = lay.iw + 'px'; c.style.height = lay.ih + 'px';
+      c.width = Math.round(canW * dpr); c.height = Math.round(canH * dpr);
+      c.style.width = canW + 'px'; c.style.height = canH + 'px';
     }
     // glow: a quarter-size canvas is blurred while it is small (cheap) and only then scaled up by the compositor
-    gl.width = Math.ceil(lay.iw / 4); gl.height = Math.ceil(lay.ih / 4);
+    gl.width = Math.ceil(canW / 4); gl.height = Math.ceil(canH / 4);
     gl.style.width = gl.width + 'px'; gl.style.height = gl.height + 'px';
     gl.style.transformOrigin = '0 0'; gl.style.transform = 'scale(4)';
     gl.style.filter = 'blur(' + (lay.portrait ? 2.5 : Math.max(2.5, 5.5 * lay.px)) + 'px)';
@@ -230,7 +245,7 @@ window.DECK = (() => {
     ctx.globalAlpha = 1;
 
     // glow layer (quarter resolution, blurred by css)
-    gctx.setTransform(0.25, 0, 0, 0.25, 0, 0); gctx.clearRect(0, 0, iw + 8, ih + 8);
+    gctx.setTransform(0.25, 0, 0, 0.25, 0, 0); gctx.clearRect(0, 0, canW + 8, canH + 8);
     gctx.strokeStyle = mk(gctx, false); gctx.lineWidth = (portrait ? 5 : 8 * px) * wpulse; gctx.lineJoin = 'bevel';
     gctx.globalAlpha = 0.3 * dim; gctx.beginPath();
     for (let k = 0; k < N; k += 4) { if (!TH[k]._wh && TH[k]._al > 0.05) sub(gctx, k); }
@@ -244,7 +259,7 @@ window.DECK = (() => {
       if (n > near) { near = n; FS = S; }
     }
     if (near > 0 || !frontClean) {
-      fctx.setTransform(dpr, 0, 0, dpr, 0, 0); fctx.clearRect(0, 0, iw, ih);
+      fctx.setTransform(dpr, 0, 0, dpr, 0, 0); fctx.clearRect(0, 0, canW, canH);
       fr.style.opacity = near; frontClean = near <= 0;
     }
     if (near > 0) {
@@ -290,12 +305,20 @@ window.DECK = (() => {
     const stages = [...document.querySelectorAll('.stage')];
     if (SHOT || !('IntersectionObserver' in window)) stages.forEach((s) => s.classList.add('in'));
     else {
-      const io = new IntersectionObserver((es) => es.forEach((e) => e.target.classList.toggle('in', e.isIntersecting)), { threshold: 0.4 });
+      // text appears when 40% of a page is in view and disappears only when the page has left the screen completely,
+      // so small scroll and address-bar movements never make it blink
+      const io = new IntersectionObserver((es) => es.forEach((e) => {
+        if (e.intersectionRatio >= 0.4) e.target.classList.add('in'); else if (!e.isIntersecting) e.target.classList.remove('in');
+      }), { threshold: [0, 0.4] });
       stages.forEach((s) => io.observe(s));
     }
     frame(where(), 0);
     if (SHOT) return;
-    addEventListener('resize', () => { size(); frame(where(), performance.now() / 1000); });
+    // a height-only change (the phone address bar) only re-measures the slides; the canvases stay as they are
+    addEventListener('resize', () => {
+      if (innerWidth === canW && innerHeight <= canH) layout(); else size();
+      frame(where(), performance.now() / 1000);
+    });
     addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') ptarget = [e.clientX / innerWidth - 0.5, e.clientY / innerHeight - 0.5]; });
     addEventListener('keydown', (e) => {
       const d = { ArrowRight: 1, ArrowDown: 1, PageDown: 1, ' ': 1, ArrowLeft: -1, ArrowUp: -1, PageUp: -1 }[e.key];
@@ -321,7 +344,7 @@ window.DECK = (() => {
     })(last);
   }
 
-  return { scene, start, H, TH };
+  return { scene, start, H, TH, where: () => where(), lay: () => lay };
 })();
 
 // Slide 1, cover: the brand sign, an infinity of light threads (blue loop and pink loop, light where they cross).
