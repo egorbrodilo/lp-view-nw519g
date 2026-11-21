@@ -69,14 +69,14 @@ window.DECK = (() => {
   function scene(n, def) { DEFS[n] = def; }
 
   // ---- layout: a 1920x1080 stage in landscape, a 390x844 stage in portrait, both centred in the viewport
-  let lay, SC = [], slides = [], tops = [], heights = [], snaps = [];
+  let lay, SC = [], slides = [], tops = [], heights = [], snaps = [], deck = null;
   // The height of one page is the real height of a one-page slide (100svh in CSS), not innerHeight: on a phone
   // innerHeight grows and shrinks while the address bar hides and shows during scrolling. Using it made the
   // threads half-morph into the next slide and jump back and forth, out of step with the text.
   function pageH() {
     const one = slides.find((s) => !s.classList.contains('two')) || slides[0];
     const h = one ? one.offsetHeight : 0;
-    return h > 100 ? h : innerHeight;
+    return h > 100 ? h : (deck ? deck.clientHeight : innerHeight);
   }
   function layout() {
     const iw = innerWidth, ih = pageH(), portrait = iw / ih < 0.8;
@@ -99,7 +99,7 @@ window.DECK = (() => {
     if (slides.length && (Math.abs(pageH() - lay.ih) > 0.5 || innerWidth !== lay.iw || slides[slides.length - 1].offsetTop !== tops[tops.length - 1])) {
       if (innerWidth === canW && innerHeight <= canH) layout(); else size();
     }
-    const y = window.scrollY || document.documentElement.scrollTop || 0, vh = lay.ih;
+    const y = deck ? deck.scrollTop : (window.scrollY || 0), vh = lay.ih;
     let i = 0;
     while (i < tops.length - 1 && y >= tops[i + 1]) i++;
     const inner = Math.max(1, heights[i] - vh);
@@ -298,7 +298,7 @@ window.DECK = (() => {
 
   function start() {
     cv = $('threads'); gl = $('glow'); fr = $('front'); core = $('core'); b1 = $('blobPink'); b2 = $('blobBlue');
-    slides = [...document.querySelectorAll('.slide')];
+    deck = document.getElementById('deck'); slides = [...document.querySelectorAll('.slide')];
     SC = slides.map((s) => DEFS[+s.dataset.n]);
     SC.forEach((d, i) => { if (!d) throw new Error('no scene for slide ' + slides[i].dataset.n); });
     size();
@@ -324,13 +324,13 @@ window.DECK = (() => {
       const d = { ArrowRight: 1, ArrowDown: 1, PageDown: 1, ' ': 1, ArrowLeft: -1, ArrowUp: -1, PageUp: -1 }[e.key];
       if (!d) return;
       e.preventDefault();
-      const y = window.scrollY || 0;
+      const y = deck ? deck.scrollTop : (window.scrollY || 0);
       let target = y;
       if (d > 0) { const n = snaps.find((s) => s > y + 4); target = n === undefined ? snaps[snaps.length - 1] : n; }
       else { const p = snaps.filter((s) => s < y - 4); target = p.length ? p[p.length - 1] : 0; }
-      scrollTo({ top: target, behavior: 'smooth' });
+      (deck || window).scrollTo({ top: target, behavior: 'smooth' });
     });
-    if (reduce) { addEventListener('scroll', () => frame(where(), 0), { passive: true }); return; }
+    if (reduce) { (deck || window).addEventListener('scroll', () => frame(where(), 0), { passive: true }); return; }
     let slow = 0, frames = 0, last = performance.now();
     (function loop(now) {
       const dt = now - last; last = now;

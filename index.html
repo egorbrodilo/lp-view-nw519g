@@ -6,10 +6,15 @@
 @font-face{font-family:CG;font-weight:600;src:url(fonts/CormorantGaramond-SemiBold.ttf)}
 @font-face{font-family:CG;font-weight:600;font-style:italic;src:url(fonts/CormorantGaramond-SemiBoldItalic.ttf)}
 @font-face{font-family:CG;font-weight:700;src:url(fonts/CormorantGaramond-Bold.ttf)}
-:root{--px:calc(min(100vw,177.778svh)/1920);--ink:#2B2130;--pink:#C92742;--blue:#0A74A3;--cream:#FFF0E5}
-@media (max-aspect-ratio:4/5){:root{--px:calc(min(100vw,46.209svh)/390)}}
+:root{--px:calc(min(100vw,177.778vh)/1920);--ink:#2B2130;--pink:#C92742;--blue:#0A74A3;--cream:#FFF0E5}
+@media (max-aspect-ratio:4/5){:root{--px:calc(min(100vw,46.209vh)/390)}}
+@supports (height:100dvh){:root{--px:calc(min(100vw,177.778dvh)/1920)}@media (max-aspect-ratio:4/5){:root{--px:calc(min(100vw,46.209dvh)/390)}}}
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-snap-type:y mandatory;background:var(--cream);overflow-x:hidden;-webkit-text-size-adjust:100%}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+html{background:var(--cream);-webkit-text-size-adjust:100%}
+/* the deck scrolls inside its own fixed window: the page itself never scrolls, so a phone browser never shows or hides
+   its address bar during the presentation and the snap points never move under the finger */
+#deck{position:fixed;inset:0;z-index:2;overflow-y:auto;overflow-x:hidden;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 body{font-family:CG,Georgia,serif;font-weight:500;color:var(--ink);-webkit-font-smoothing:antialiased;font-feature-settings:"lnum","kern"}
 .fx{position:fixed;left:0;top:0;pointer-events:none}
 #blobPink,#blobBlue{width:1000px;height:1000px;border-radius:50%;z-index:0;will-change:transform}
@@ -18,7 +23,7 @@ body{font-family:CG,Georgia,serif;font-weight:500;color:var(--ink);-webkit-font-
 #glow{z-index:1;opacity:.9;will-change:transform}#threads{z-index:1}#front{z-index:3}
 #core{width:400px;height:400px;border-radius:50%;will-change:transform;z-index:1;background:radial-gradient(closest-side,rgba(255,255,255,.98),rgba(255,255,255,.55) 45%,rgba(255,255,255,0))}
 #grain{z-index:6;width:100vw;height:100vh;opacity:.5;background-size:140px 140px}
-.slide{position:relative;height:100vh;height:100svh;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;overflow:clip}   /* clip, not hidden: hidden would make the slide a scroll container and its inner snap point would stop working */
+.slide{position:relative;height:100%;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;overflow:clip}   /* clip, not hidden: hidden would make the slide a scroll container and its inner snap point would stop working */
 .stage{position:absolute;left:50%;top:50%;width:calc(1920*var(--px));height:calc(1080*var(--px));margin:calc(-540*var(--px)) 0 0 calc(-960*var(--px))}
 .snap1,.snap2{display:none}
 .e{position:absolute;z-index:4;left:calc(var(--l)*var(--px));top:calc(var(--t)*var(--px));right:calc(var(--r)*var(--px));bottom:calc(var(--b)*var(--px));width:calc(var(--w)*var(--px));font-size:calc(var(--fs)*var(--px));
@@ -32,7 +37,7 @@ body{font-family:CG,Georgia,serif;font-weight:500;color:var(--ink);-webkit-font-
  .lg svg{height:calc(var(--ph)*var(--px))}
  .lbr{display:none}.pbr{display:inline}
  /* a slide with two pages on the phone: twice the height, the second stage sits in the second screen */
- .slide.two{height:200vh;height:200svh}
+ .slide.two{height:200%}
  .slide.two .stage{top:25%}
  .slide.two .stage.s2{top:75%}
  /* the tall slide itself is not a snap area (a tall snap area lets the page rest anywhere inside it); its two pages are */
@@ -250,7 +255,7 @@ h1,h2,h3,p{font-weight:500}
  .s11-cl{grid-column:1;grid-row:2;text-align:center;margin-top:calc(15*var(--px))}
  .s11-cr{grid-column:1;grid-row:3;text-align:center;font-size:1.26em;padding:.14em 1em .6em}   /* a comfortable tap area for the link */
 }
-</style></head><body><div id="blobPink" class="fx"></div><div id="blobBlue" class="fx"></div><canvas id="glow" class="fx"></canvas><canvas id="threads" class="fx"></canvas><div id="core" class="fx"></div><canvas id="front" class="fx"></canvas><div id="grain" class="fx"></div><main><section class="slide" data-n="1"><div class="stage"><div class="e lg" style="--l:112;--t:92;--h:34;--pl:24;--pt:30;--ph:15;--i:0;"><svg viewBox="670 2025 2730 345" fill="currentColor" role="img" aria-label="Love&amp;Pay"><path  d="M754.06,2305.67c0,8.72.85,15.1,2.57,19.14,1.71,4.05,4.97,6.77,9.8,8.17,4.82,1.4,12.52,2.1,23.11,2.1h44.81c18.67,0,34-5.67,45.98-17.04,11.98-11.36,19.84-26.84,23.57-46.45,0-.93.85-1.32,2.57-1.17,1.71.16,2.57.7,2.57,1.63-2.8,26.45-4.2,48.55-4.2,66.29,0,2.49-.47,4.28-1.4,5.37-.93,1.09-2.8,1.63-5.6,1.63h-216.59c-.63,0-.93-.93-.93-2.8s.31-2.8.93-2.8c11.51,0,19.91-.77,25.21-2.33,5.29-1.55,8.87-4.59,10.74-9.1,1.87-4.51,2.8-11.44,2.8-20.77v-216.13c0-9.34-.93-16.18-2.8-20.54-1.87-4.35-5.45-7.39-10.74-9.1-5.29-1.71-13.7-2.57-25.21-2.57-.63,0-.93-.93-.93-2.8s.31-2.8.93-2.8l23.34.47c13.07.63,23.81.93,32.21.93,9.02,0,20.07-.31,33.14-.93l22.87-.47c.62,0,.93.93.93,2.8s-.31,2.8-.93,2.8c-11.2,0-19.53.86-24.97,2.57-5.45,1.71-9.1,4.83-10.97,9.34-1.87,4.51-2.8,11.44-2.8,20.77v213.79Z"/>
+</style></head><body><div id="blobPink" class="fx"></div><div id="blobBlue" class="fx"></div><canvas id="glow" class="fx"></canvas><canvas id="threads" class="fx"></canvas><div id="core" class="fx"></div><canvas id="front" class="fx"></canvas><div id="grain" class="fx"></div><main id="deck"><section class="slide" data-n="1"><div class="stage"><div class="e lg" style="--l:112;--t:92;--h:34;--pl:24;--pt:30;--ph:15;--i:0;"><svg viewBox="670 2025 2730 345" fill="currentColor" role="img" aria-label="Love&amp;Pay"><path  d="M754.06,2305.67c0,8.72.85,15.1,2.57,19.14,1.71,4.05,4.97,6.77,9.8,8.17,4.82,1.4,12.52,2.1,23.11,2.1h44.81c18.67,0,34-5.67,45.98-17.04,11.98-11.36,19.84-26.84,23.57-46.45,0-.93.85-1.32,2.57-1.17,1.71.16,2.57.7,2.57,1.63-2.8,26.45-4.2,48.55-4.2,66.29,0,2.49-.47,4.28-1.4,5.37-.93,1.09-2.8,1.63-5.6,1.63h-216.59c-.63,0-.93-.93-.93-2.8s.31-2.8.93-2.8c11.51,0,19.91-.77,25.21-2.33,5.29-1.55,8.87-4.59,10.74-9.1,1.87-4.51,2.8-11.44,2.8-20.77v-216.13c0-9.34-.93-16.18-2.8-20.54-1.87-4.35-5.45-7.39-10.74-9.1-5.29-1.71-13.7-2.57-25.21-2.57-.63,0-.93-.93-.93-2.8s.31-2.8.93-2.8l23.34.47c13.07.63,23.81.93,32.21.93,9.02,0,20.07-.31,33.14-.93l22.87-.47c.62,0,.93.93.93,2.8s-.31,2.8-.93,2.8c-11.2,0-19.53.86-24.97,2.57-5.45,1.71-9.1,4.83-10.97,9.34-1.87,4.51-2.8,11.44-2.8,20.77v213.79Z"/>
   <path  d="M1055.38,2332.83c-22.57-13.54-39.99-31.9-52.28-55.08-12.3-23.18-18.44-48.47-18.44-75.86,0-32.05,8.09-59.52,24.27-82.39,16.18-22.87,36.95-40.06,62.32-51.58,25.36-11.51,51.27-17.27,77.72-17.27,29.56,0,55.55,6.93,77.96,20.77,22.41,13.85,39.6,32.14,51.58,54.85,11.98,22.72,17.97,46.84,17.97,72.35,0,28.32-7.47,54.31-22.41,77.96-14.94,23.65-34.94,42.33-59.98,56.02-25.05,13.7-52.21,20.54-81.46,20.54s-54.7-6.77-77.25-20.31ZM1204.29,2327.46c16.34-10.27,29.25-25.28,38.74-45.05,9.49-19.76,14.24-43.33,14.24-70.72,0-28.94-5.21-54.77-15.64-77.49-10.43-22.71-25.29-40.45-44.58-53.21-19.3-12.76-41.71-19.14-67.22-19.14-33.3,0-59.28,10.97-77.96,32.91s-28.01,52.21-28.01,90.79c0,29.26,5.29,55.86,15.87,79.82,10.58,23.97,25.36,42.87,44.35,56.72,18.98,13.85,40.61,20.77,64.88,20.77,20.54,0,38.98-5.13,55.32-15.4Z"/>
   <path  d="M1668.51,2057.31c0,1.87-.47,2.8-1.4,2.8-21.79,0-38.12,13.38-49.01,40.14l-97.09,245.54c-.31,1.24-2.03,1.87-5.13,1.87-2.5,0-4.2-.63-5.13-1.87l-116.23-252.54c-5.6-11.82-11.28-20.31-17.04-25.44-5.76-5.13-13.15-7.7-22.17-7.7-.93,0-1.4-.93-1.4-2.8s.47-2.8,1.4-2.8l15.87.47c8.71.63,16.02.93,21.94.93,14.94,0,29.88-.31,44.81-.93,4.97-.31,11.51-.47,19.61-.47.93,0,1.4.93,1.4,2.8s-.47,2.8-1.4,2.8c-19.3,0-28.94,5.76-28.94,17.27,0,4.36,1.4,9.65,4.2,15.87l94.76,206.33,79.82-201.66c2.49-6.84,3.73-12.44,3.73-16.8,0-7.16-2.88-12.44-8.64-15.87-5.76-3.42-14.86-5.13-27.31-5.13-.93,0-1.4-.93-1.4-2.8s.47-2.8,1.4-2.8l20.54.47c11.2.63,21.31.93,30.34.93,5.91,0,13.22-.31,21.94-.93l19.14-.47c.93,0,1.4.93,1.4,2.8Z"/>
   <path  d="M1938.79,2274.97c1.87.16,2.8.7,2.8,1.63-2.8,20.23-4.2,41.08-4.2,62.55,0,2.49-.55,4.28-1.63,5.37-1.09,1.09-3.03,1.63-5.83,1.63h-197.46c-.63,0-.93-.93-.93-2.8s.31-2.8.93-2.8c11.51,0,19.91-.77,25.21-2.33,5.29-1.55,8.87-4.59,10.74-9.1,1.87-4.51,2.8-11.44,2.8-20.77v-216.13c0-9.34-.93-16.18-2.8-20.54-1.87-4.35-5.45-7.39-10.74-9.1-5.29-1.71-13.7-2.57-25.21-2.57-.63,0-.93-.93-.93-2.8s.31-2.8.93-2.8h189.52c2.8,0,4.2,1.4,4.2,4.2l.93,58.35c0,.93-.86,1.4-2.57,1.4s-2.57-.47-2.57-1.4c-1.87-16.8-7.63-29.71-17.27-38.74-9.65-9.02-22.25-13.54-37.81-13.54h-25.67c-14.63,0-24.27,2.03-28.94,6.07-4.67,4.05-7,11.83-7,23.34v95.23h53.68c15.56,0,26.84-2.64,33.84-7.94,7-5.29,10.5-13.84,10.5-25.67,0-.62.93-.93,2.8-.93s2.8.31,2.8.93l-.47,38.74c0,9.03.15,15.87.47,20.54l.47,23.34c0,.63-.93.93-2.8.93s-2.8-.31-2.8-.93c0-13.69-3.58-23.57-10.74-29.64-7.16-6.07-18.83-9.1-35.01-9.1h-52.75v106.9c0,8.1.93,14.16,2.8,18.21,1.87,4.05,5.13,6.93,9.8,8.64,4.67,1.71,11.82,2.57,21.47,2.57h33.14c16.49,0,30.18-5.21,41.08-15.64,10.89-10.42,18.36-25.13,22.41-44.11,0-.93.93-1.32,2.8-1.17Z"/>
