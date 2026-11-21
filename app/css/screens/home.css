@@ -1,0 +1,14 @@
+.home-head{min-height:34px}
+.home-logo svg{height:15px}
+.home-hero{height:232px;margin-top:2px}
+.home-hero .label{margin-bottom:9px}
+.home-sub{margin-top:9px;font-size:13.5px}
+.s-home .actions{margin-top:2px}
+.home-sec{margin-top:28px}
+.home-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.home-hero .amount{font-size:50px}
+.home-hero .over{text-shadow:0 0 16px rgba(255,240,229,.95),0 0 5px rgba(255,240,229,.9)}
+.s-home .li b{font-size:14.5px}
+.home-svc{display:flex;flex-direction:column;gap:12px;align-items:flex-start;justify-content:space-between;min-height:96px;padding:14px 13px 13px;border-radius:20px;background:var(--paper);border:1px solid rgba(255,255,255,.75);text-align:left;font:600 13.5px/1.2 var(--sans)}
+.home-svc svg{width:28px;height:28px}
+.home-slogan{margin:34px 0 4px}

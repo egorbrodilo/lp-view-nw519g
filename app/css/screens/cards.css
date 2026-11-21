@@ -1,0 +1,22 @@
+.cards-title{margin-top:8px}
+.cards-lead{margin:8px 0 0;font-size:14.5px}
+.cards-hero{height:300px}
+.cards-face{position:relative;width:20em;height:12.6em;border-radius:1.2em;overflow:hidden;font-size:8.4px;text-align:left;box-shadow:0 2em 3.4em -1.4em rgba(43,33,48,.4),0 .1em 0 rgba(255,255,255,.7) inset}
+.cards-face::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,0) 38%,rgba(255,255,255,0) 62%,rgba(255,255,255,.28) 100%)}
+.cards-visa{background:linear-gradient(160deg,#67D2F6 0%,#9ADFF3 42%,#FFF0E5 100%)}
+.cards-mc{background:linear-gradient(160deg,#FF6B76 0%,#FF9BA1 45%,#FFF0E5 100%)}
+.cards-mono svg{position:absolute;left:1.4em;top:1.2em;height:2.3em;color:#fff}
+.cards-chip{position:absolute;left:1.6em;bottom:1.6em;width:2.7em;height:2em;border-radius:.4em;background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(255,255,255,.45));box-shadow:0 0 0 1px rgba(255,255,255,.7)}
+.cards-net{position:absolute;right:1.5em;bottom:1.7em;font:700 1.04em var(--serif);letter-spacing:.18em;text-transform:uppercase;color:var(--ink);opacity:.72}
+.cards-pos{position:absolute;left:50%;top:50%;border-radius:10px}
+.cards-pos1{transform:translate(-64%,-88%) rotate(-13deg)}
+.cards-pos2{transform:translate(-36%,-12%) rotate(9deg)}
+.cards-slogan{margin:26px 0 4px}
+.cards-big{display:flex;justify-content:center;padding:6px 0 4px}
+.cards-lg{font-size:14.5px}
+.cards-bal{margin-top:20px}
+.cards-bal .label{margin-bottom:8px}
+.cards-actions{margin-top:20px}
+.cards-issue{margin-top:22px}
+.cards-terms{margin-top:28px}
+.cards-terms .kv dt{flex:0 0 42%}

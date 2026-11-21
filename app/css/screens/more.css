@@ -1,0 +1,63 @@
+/* eSIM */
+.esim-hero{height:250px}
+.esim-sim{position:absolute;left:50%;top:50%;width:46px;height:46px;transform:translate(-50%,-50%)}
+.esim-sim svg{width:46px;height:46px}
+.esim-num{font-size:64px}
+.esim-lead{margin:10px 0 18px}
+.esim-list{margin-top:22px}
+.esim-list .li{grid-template-columns:auto 1fr}
+.esim-list .li b{font-weight:500;font-size:15px}
+.esim-slogan{margin:26px 0 4px}
+
+/* referral */
+.ref-hero{height:200px}
+.ref-link{margin-top:18px}
+.ref-link .label{margin-bottom:8px}
+.ref-url{font:600 14.5px var(--sans);word-break:break-all}
+.ref-link .rowx{flex-direction:column;align-items:stretch;gap:12px}
+.ref-link .btn{width:100%}
+.ref-table th:not(:first-child),.ref-table td{padding-left:16px;white-space:nowrap}
+.ref-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 10px}
+.ref-stats .label{margin-bottom:6px}
+.ref-n{display:block;font-size:40px;margin-bottom:2px}
+.ref-stats .muted{font-size:13px}
+.ref-sec{margin-top:28px}
+.ref-table{width:100%;border-collapse:collapse;font-size:14.5px}
+.ref-table th,.ref-table td{padding:13px 0;border-top:1px solid var(--line);text-align:right;font-weight:500}
+.ref-table thead th{border-top:0;font:600 11px var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--ink3)}
+.ref-table th:first-child{text-align:left}
+.ref-table tbody th{font-weight:600}
+.ref-table td{width:22%;font-family:var(--serif);font-size:19px;font-feature-settings:"lnum"}
+.ref-table .ref-l1{color:var(--pink);font-weight:700}
+.ref-slogan{margin:30px 0 4px}
+
+/* business */
+.biz-lead{margin:8px 0 0}
+.biz-hero{height:270px}
+.biz-qr{position:absolute;left:50%;top:50%;width:132px;transform:translate(-50%,-50%)}
+.biz-seg{margin-bottom:14px}
+.biz-field{margin-bottom:14px}
+.biz-link{margin:10px 0 12px}
+.biz-sec{margin-top:26px}
+.biz-sec .li{grid-template-columns:auto 1fr}
+.biz-slogan{margin:28px 0 4px}
+
+/* exchange */
+.ex-title{margin-top:8px}
+.ex-lead{margin:8px 0 0;font-size:14.5px}
+.ex-hero{height:170px}
+.ex-box{margin-bottom:12px}
+.ex-mid{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;margin:14px 0}
+.ex-swap{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--paper2)}
+.ex-swap svg{width:22px;height:22px}
+.ex-to{font-size:40px;margin-top:6px}
+.s-exchange .btn{margin:14px 0 12px}
+
+/* profile */
+.pr-title{margin-top:8px}
+.pr-user{display:flex;align-items:center;gap:14px;margin-top:16px}
+.pr-ava{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:var(--grad);color:#fff}
+.pr-ava svg{height:15px}
+.pr-sub{display:block;font-size:13px;margin-top:2px}
+.pr-sec{margin-top:26px}
+.pr-slogan{margin:30px 0 4px}

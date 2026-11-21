@@ -1,0 +1,19 @@
+.m2-gap{margin-top:18px}
+.m2-top{margin-top:26px}
+.m2-h{margin:24px 0 12px}
+.m2-lab{margin-bottom:8px}
+.m2-li{grid-template-columns:auto 1fr}
+.m2-plain{font-weight:500!important;font-size:15px!important}
+.m2-slogan{margin:28px 0 4px}
+.m2-hero-w{height:270px}
+.m2-hero-i{height:210px}
+.m2-hero-p{height:330px}
+.m2-bal{margin-top:26px}
+.m2-bal .label{margin-bottom:8px}
+.m2-chips{justify-content:center;margin-bottom:22px}
+.m2-formula{display:flex;align-items:center;justify-content:center;gap:4px;margin:22px 0 14px;font:500 50px/1 var(--serif);letter-spacing:-.02em;font-feature-settings:"lnum";white-space:nowrap}
+.m2-formula canvas{width:104px;height:58px;flex:none}
+.s-wallets .btn+.panel{margin-top:14px}
+.s-wallets .note{margin-top:10px}
+.s-invoice .note{margin-top:12px}
+.s-pay .btn{margin-top:6px}
