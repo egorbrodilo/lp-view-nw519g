@@ -69,43 +69,38 @@ window.DECK = (() => {
   function scene(n, def) { DEFS[n] = def; }
 
   // ---- layout: a 1920x1080 stage in landscape, a 390x844 stage in portrait, both centred in the viewport
-  let lay, SC = [], slides = [], tops = [], heights = [], snaps = [], deck = null;
-  // The height of one page is the real height of a one-page slide (100svh in CSS), not innerHeight: on a phone
-  // innerHeight grows and shrinks while the address bar hides and shows during scrolling. Using it made the
-  // threads half-morph into the next slide and jump back and forth, out of step with the text.
+  let lay, SC = [], slides = [], all = [], tops = [], heights = [], snaps = [], deck = null;
+  // Every screen is its own section of equal height (100% of the deck window). A long slide has a second section
+  // (data-page="2") that is shown only on a phone; hidden sections are left out, so indexes follow what is on screen.
   function pageH() {
-    const one = slides.find((s) => !s.classList.contains('two')) || slides[0];
-    const h = one ? one.offsetHeight : 0;
+    const h = slides.length ? slides[0].offsetHeight : 0;
     return h > 100 ? h : (deck ? deck.clientHeight : innerHeight);
   }
   function layout() {
+    slides = all.filter((s) => s.offsetHeight > 0);
+    SC = slides.map((s) => DEFS[+s.dataset.n]);
     const iw = innerWidth, ih = pageH(), portrait = iw / ih < 0.8;
     const px = portrait ? Math.min(iw, ih * 0.46209) / 390 : Math.min(iw, ih * 1.77778) / 1920;
     const sw = (portrait ? 390 : 1920) * px, sh = (portrait ? 844 : 1080) * px;
-    lay = { px, ox: (iw - sw) / 2, oy: (ih - sh) / 2, portrait, iw, ih };
+    lay = { px, ox: (iw - sw) / 2, oy: (ih - sh) / 2, portrait, iw, ih, count: slides.length };
     tops = slides.map((s) => s.offsetTop); heights = slides.map((s) => s.offsetHeight);
-    snaps = [];
-    slides.forEach((s, i) => {
-      snaps.push(tops[i]);
-      for (let y = tops[i] + ih; y < tops[i] + heights[i] - ih * 0.5; y += ih) snaps.push(y);   // inner pages of tall slides
-    });
+    snaps = tops.slice();
   }
 
-  // where we are: slide index i, transition f towards slide i+1, inner scroll u of a tall slide (0..1)
+  // where we are: screen index i, transition f towards screen i+1; page2 tells whether a screen is a second page
+  const isP2 = (k) => !!slides[k] && slides[k].dataset.page === '2';
   function where() {
-    if (SHOT) return { i: window.DECK_START, f: 0, u: window.DECK_PAGE ? 1 : 0 };
+    if (SHOT) { layout(); return { i: 0, f: 0 }; }
     // measurements go stale while a phone browser moves its bars or a window is resized: check them every time
-    // (two cheap reads) and re-measure when the page height or the slide positions have moved
-    if (slides.length && (Math.abs(pageH() - lay.ih) > 0.5 || innerWidth !== lay.iw || slides[slides.length - 1].offsetTop !== tops[tops.length - 1])) {
+    if (all.length && (Math.abs(pageH() - lay.ih) > 0.5 || innerWidth !== lay.iw || all.filter((x) => x.offsetHeight > 0).length !== lay.count
+        || (slides.length && slides[slides.length - 1].offsetTop !== tops[tops.length - 1]))) {
       if (innerWidth === canW && innerHeight <= canH) layout(); else size();
     }
     const y = deck ? deck.scrollTop : (window.scrollY || 0), vh = lay.ih;
     let i = 0;
     while (i < tops.length - 1 && y >= tops[i + 1]) i++;
-    const inner = Math.max(1, heights[i] - vh);
-    const u = heights[i] > vh * 1.2 ? clamp((y - tops[i]) / inner) : 0;
-    const f = i < tops.length - 1 ? clamp((y - (tops[i + 1] - vh)) / vh) : 0;
-    return { i, f, u };
+    const f = i < tops.length - 1 ? clamp((y - tops[i]) / vh) : 0;
+    return { i, f };
   }
 
   // ---- canvases
@@ -114,7 +109,7 @@ window.DECK = (() => {
   function size() {
     layout();
     // canvases cover the largest viewport (address bar hidden), so they never need to be re-created while scrolling
-    canW = lay.iw; canH = Math.max(innerHeight, lay.ih, canH && canW === lay.iw ? canH : 0);
+    canW = lay.iw; canH = Math.max(innerHeight, lay.ih, lay.portrait && window.screen ? screen.height : 0, canH && canW === lay.iw ? canH : 0);
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     if (!SHOT) dpr = Math.max(1, Math.min(dpr, 1.6, Math.sqrt(3.0e6 / (canW * canH))));
     for (const c of [cv, fr]) {
@@ -146,7 +141,8 @@ window.DECK = (() => {
     const sx = ox + pointer[0] * 14 * px, sy = oy + pointer[1] * 10 * px;
     const fe = sm(f);
     // on the second page of a tall slide the picture steps back and the text takes over
-    const dimA = 1 - (1 - (A.dim2 === undefined ? 0.2 : A.dim2)) * w.u, dim = lerp(dimA, 1, fe);
+    const d2 = (S) => (S.dim2 === undefined ? 0.2 : S.dim2);
+    const dimA = isP2(i) ? d2(A) : 1, dimB = isP2(i + 1) ? d2(B) : 1, dim = lerp(dimA, dimB, fe);
 
     // points
     if (f < 1 && A.prep) A.prep(time, ca);
@@ -298,9 +294,8 @@ window.DECK = (() => {
 
   function start() {
     cv = $('threads'); gl = $('glow'); fr = $('front'); core = $('core'); b1 = $('blobPink'); b2 = $('blobBlue');
-    deck = document.getElementById('deck'); slides = [...document.querySelectorAll('.slide')];
-    SC = slides.map((s) => DEFS[+s.dataset.n]);
-    SC.forEach((d, i) => { if (!d) throw new Error('no scene for slide ' + slides[i].dataset.n); });
+    deck = document.getElementById('deck'); all = [...document.querySelectorAll('.slide')];
+    all.forEach((x) => { if (!DEFS[+x.dataset.n]) throw new Error('no scene for slide ' + x.dataset.n); });
     size();
     const stages = [...document.querySelectorAll('.stage')];
     if (SHOT || !('IntersectionObserver' in window)) stages.forEach((s) => s.classList.add('in'));
