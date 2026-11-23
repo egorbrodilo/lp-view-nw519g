@@ -363,24 +363,65 @@ window.DECK = (() => {
   });
 })();
 
-// Slide 2: two linked rings. Exchange (two sides of a deal) and two that became one.
+// Slide 2: a crypto wallet. A wallet of light threads (body, strap with a clasp) with two coins peeking out of it;
+// the big coin carries the bitcoin sign (DOM element in s02.py, its centre must match coinX / coinY below).
+// Unit space: wallet body x -1..1, y -0.55..0.75; the whole picture is y -1.3..0.75, its middle is at cfg.cy.
 (() => {
   const H = DECK.H;
+  const bBody = H.mkBuf(), bFlap = H.mkBuf(), bClasp = H.mkBuf(), bCoin = H.mkBuf(), bRim = H.mkBuf(), bCoin2 = H.mkBuf();
+  const DY = 0.275;                       // shift that puts the middle of the picture at cfg.cy
+  // rounded rectangle walked by arc length, t in 0..TAU
+  function rrect(x0, y0, x1, y1, r) {
+    const w = x1 - x0 - 2 * r, h = y1 - y0 - 2 * r, P = 2 * (w + h) + H.TAU * r;
+    return (t) => {
+      let d = ((t / H.TAU) % 1 + 1) % 1 * P;
+      if (d < w) return [x0 + r + d, y0]; d -= w;
+      if (d < Math.PI * r / 2) { const a = -Math.PI / 2 + d / r; return [x1 - r + r * Math.cos(a), y0 + r + r * Math.sin(a)]; } d -= Math.PI * r / 2;
+      if (d < h) return [x1, y0 + r + d]; d -= h;
+      if (d < Math.PI * r / 2) { const a = d / r; return [x1 - r + r * Math.cos(a), y1 - r + r * Math.sin(a)]; } d -= Math.PI * r / 2;
+      if (d < w) return [x1 - r - d, y1]; d -= w;
+      if (d < Math.PI * r / 2) { const a = Math.PI / 2 + d / r; return [x0 + r + r * Math.cos(a), y1 - r + r * Math.sin(a)]; } d -= Math.PI * r / 2;
+      if (d < h) return [x0, y1 - r - d]; d -= h;
+      const a = Math.PI + d / r; return [x0 + r + r * Math.cos(a), y0 + r + r * Math.sin(a)];
+    };
+  }
+  // a coin that peeks out of the wallet: the arc above the wallet top (y = yc) closed by the chord along the top edge
+  function coin(cx, cy, R, yc) {
+    const dx = Math.sqrt(Math.max(R * R - (yc - cy) * (yc - cy), 0)), a0 = Math.atan2(yc - cy, dx);
+    const A1 = a0, A2 = Math.PI - a0;          // right and left ends of the arc on the chord (angles in canvas space, y down)
+    const arc = R * (H.TAU - (A2 - A1)), P = arc + 2 * dx;
+    return (t) => {
+      const d = ((t / H.TAU) % 1 + 1) % 1 * P;
+      if (d < arc) { const a = A2 + d / R; return [cx + R * Math.cos(a), cy + R * Math.sin(a)]; }
+      return [cx + dx - (d - arc), yc];
+    };
+  }
+  const circ = (cx, cy, R) => (t) => [cx + R * Math.cos(t), cy + R * Math.sin(t)];
+  const fBody = rrect(-1, -0.55, 1, 0.75, 0.2), fFlap = rrect(0.34, -0.06, 1.12, 0.46, 0.14), fClasp = circ(0.6, 0.2, 0.075);
+  const fCoin = coin(-0.22, -0.75, 0.55, -0.55), fRim = coin(-0.22, -0.75, 0.43, -0.55), fCoin2 = coin(0.36, -0.68, 0.38, -0.55);
+  const sh = (f) => (t) => { const p = f(t); return [p[0], p[1] + DY]; };
+  const F = [sh(fBody), sh(fFlap), sh(fClasp), sh(fCoin), sh(fRim), sh(fCoin2)], B = [bBody, bFlap, bClasp, bCoin, bRim, bCoin2];
+  const grp = (q) => q < 0.40 ? 0 : q < 0.53 ? 1 : q < 0.57 ? 2 : q < 0.78 ? 3 : q < 0.86 ? 4 : q < 0.94 ? 5 : 6;
+  const WID = [16, 11, 1.6, 15, 6, 10];       // half-width of each ribbon at a = 190
   DECK.scene(2, {
-    cfg: [{ cx: 1440, cy: 300, r: 165, d: 112, rot: -10 }, { cx: 195, cy: 322, r: 58, d: 39, rot: -10 }],
-    mid: 0.8,
+    cfg: [{ cx: 1440, cy: 286, a: 190 }, { cx: 192, cy: 314, a: 66 }],
+    mid: 0.82,
     bg: [[1560, 420, 0.95, 420, 760, 1.05], [300, 300, 0.9, 60, 560, 1.0]],
+    stars: 30,
+    prep(time, c) { for (let k = 0; k < 6; k++) H.prep(B[k], F[k], c.a, time * 0.04); },
     pt(th, j, s, time, c, o) {
-      const k = H.kind(th.q), sc = c.r / 165, t = s * H.TAU + (th.side ? 0 : Math.PI);
-      th.ph = [0.5, 0.2, 0.5][k];
-      const off = H.ribbonOff(th, t, [22, 46, 12][k] * sc, 0.4, [3, 8, 2][k] * sc, time);
-      o[0] = (th.side ? c.d : -c.d) + (c.r + off) * Math.cos(t); o[1] = (c.r + off) * Math.sin(t);
-      H.rot(o, c.rot * Math.PI / 180); o[0] += c.cx; o[1] += c.cy;
+      let g = grp(th.q);
+      if (g === 6) g = th.g < 0.6 ? 0 : 3;                       // white highlights run on the body and the big coin
+      const halo = th.g > 0.82 && th.q < 0.94 && g !== 2, sc = c.a / 190;
+      th.ph = halo ? 0.2 : 0.5;
+      H.ribbonPt(B[g], j, th, s * H.TAU + time * 0.04, WID[g] * (halo ? 2.2 : 1) * sc, 0.4, (halo ? 6 : g === 2 ? 0.6 : 2.5) * sc, time, o);
+      o[0] += c.cx; o[1] += c.cy;
     },
-    al: (th) => [0.4, 0.2, 0.42][H.kind(th.q)],
-    lw: (th) => [1.05, 0.8, 0.9][H.kind(th.q)],
-    ext: (c) => [c.cx - c.d - c.r, c.cx + c.d + c.r],
-    core: (c) => [c.cx, c.cy, c.r * 0.5]
+    al: (th) => th.q >= 0.94 ? 0.42 : th.g > 0.82 ? 0.18 : 0.38,
+    lw: (th) => th.g > 0.82 ? 0.8 : 1,
+    white: (th) => th.q >= 0.94,
+    ext: (c) => [c.cx - c.a, c.cx + 1.12 * c.a],
+    core: (c) => [c.cx - 0.22 * c.a, c.cy + (DY - 0.75) * c.a, c.a * 0.32]
   });
 })();
 
